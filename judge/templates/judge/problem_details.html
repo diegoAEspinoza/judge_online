@@ -22,7 +22,11 @@
                 <textarea id="editor-code"></textarea>
             </div>
             <div class="card-footer text-end">
-                <button id="submit-btn" class="btn btn-success">Enviar Solución</button>
+                {% if user.is_authenticated %}
+                    <button id="submit-btn" class="btn btn-success">Enviar Solución</button>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-warning">Inicia sesión para enviar</a>
+                {% endif %}
             </div>
         </div>
     </div>

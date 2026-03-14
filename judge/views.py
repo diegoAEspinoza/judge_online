@@ -10,6 +10,24 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Min
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from django.db.models import Exists, OuterRef
+from .models import Problem, Submission
+from django.db.models import Count, Q
+from django.contrib.auth.models import User
+
+def global_leaderboard(request):
+    users_ranking = User.objects.annotate(
+        solved_count=Count(
+            'submission', 
+            filter=Q(submission__status='AC'),
+            distinct=True
+        )
+    ).filter(solved_count__gt=0).order_by('-solved_count', 'username')
+
+    return render(request, 'judge/global_leaderboard.html', {
+        'rankings': users_ranking
+    })
+
 
 def signup(request):
     if request.method == "POST":
@@ -33,13 +51,19 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
-
-def problem_detail(request, problem_id):
-    problem = get_object_or_404(Problem, id=problem_id)
-    return render(request, 'judge/problem_details.html', {'problem': problem})
-
 def problem_list(request):
-    problems = Problem.objects.all()
+    problems = Problem.objects.all().order_by('-created_at')
+    
+    if request.user.is_authenticated:
+        # Creamos una subconsulta: ¿Existe un envío AC de este usuario para este problema?
+        solved_subquery = Submission.objects.filter(
+            user=request.user,
+            problem=OuterRef('pk'),
+            status='AC'
+        )
+        # Anotamos el queryset principal con el resultado de la subconsulta
+        problems = problems.annotate(is_solved=Exists(solved_subquery))
+    
     return render(request, 'judge/problem_list.html', {'problems': problems})
 
 def submission_status(request, submission_id):
@@ -48,6 +72,14 @@ def submission_status(request, submission_id):
 
 @login_required
 def submit_code(request, problem_id):
+    problem = get_object_or_404(Problem, id=problem_id)
+
+    if not problem.is_active:
+        return JsonResponse({
+            "error": "El tiempo para este problema ha expirado. No se aceptan más envíos."
+        }, status=403)
+    
+    
     if request.method == "POST":
         data = json.loads(request.body)
         problem = get_object_or_404(Problem, id=problem_id)
@@ -83,3 +115,21 @@ def leaderboard(request, problem_id):
         'problem': problem,
         'rankings': best_submissions
     })
+
+@login_required
+def problem_detail(request, problem_id):
+    problem = get_object_or_404(Problem, id=problem_id)
+
+    if not problem.is_active:
+        return redirect('problem_list')
+    
+    already_solved = Submission.objects.filter(
+        user=request.user, 
+        problem=problem, 
+        status='AC'
+    ).exists()
+
+    if already_solved:
+        return redirect('submission_history')
+
+    return render(request, 'judge/problem_details.html', {'problem': problem})

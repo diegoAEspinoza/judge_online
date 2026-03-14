@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class Problem(models.Model):
     title = models.CharField(max_length=200)
@@ -8,9 +9,16 @@ class Problem(models.Model):
     time_limit = models.FloatField(default=2.0) # segundos
     memory_limit = models.IntegerField(default=128) # MB
     created_at = models.DateTimeField(auto_now_add=True)
+    deadline = models.DateTimeField(null=True, blank=True, help_text="Fecha y hora límite para enviar soluciones")
 
     def __str__(self):
         return self.title
+    
+    @property
+    def is_active(self):
+        if self.deadline:
+            return timezone.now() < self.deadline
+        return True
 
 class TestCase(models.Model):
     problem = models.ForeignKey(Problem, related_name='testcases', on_delete=models.CASCADE)
