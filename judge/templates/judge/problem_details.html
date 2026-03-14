@@ -1,0 +1,74 @@
+{% extends "judge/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2>{{ problem.title }}</h2>
+                <p class="text-muted">{{ problem.difficulty }} | {{ problem.time_limit }}s</p>
+                <hr>
+                <div class="description">
+                    {{ problem.description|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">Editor de Python</div>
+            <div class="card-body p-0">
+                <textarea id="editor-code"></textarea>
+            </div>
+            <div class="card-footer text-end">
+                <button id="submit-btn" class="btn btn-success">Enviar Solución</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<style>.CodeMirror { height: 400px; font-size: 16px; }</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+
+<script>
+    var editor = CodeMirror.fromTextArea(document.getElementById("editor-code"), {
+        lineNumbers: true,
+        mode: "python",
+        indentUnit: 4
+    });
+    editor.setValue("# Escribe tu código aquí\n");
+
+    document.getElementById("submit-btn").onclick = function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerText = "Evaluando...";
+
+        fetch("{% url 'submit_code' problem.id %}", {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/json" },
+            body: JSON.stringify({ code: editor.getValue() })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.submission_id) checkStatus(data.submission_id);
+        });
+    };
+
+    function checkStatus(id) {
+        const interval = setInterval(() => {
+            fetch(`/submission/${id}/status/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status !== 'PENDING' && data.status !== 'RUNNING') {
+                    clearInterval(interval);
+                    alert("Resultado: " + data.status);
+                    location.reload();
+                }
+            });
+        }, 2000);
+    }
+</script>
+{% endblock %}

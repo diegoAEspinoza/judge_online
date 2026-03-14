@@ -1,0 +1,64 @@
+{% extends "judge/base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Tu Historial de Envíos</h2>
+    <div class="card shadow">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Problema</th>
+                        <th>Resultado</th>
+                        <th>Tiempo</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in submissions %}
+                    <tr>
+                        <td>#{{ submission.id }}</td>
+                        <td><strong>{{ submission.problem.title }}</strong></td>
+                        <td>
+                            <span class="badge 
+                                {% if submission.status == 'AC' %}bg-success
+                                {% elif submission.status == 'WA' %}bg-danger
+                                {% elif submission.status == 'TLE' %}bg-warning text-dark
+                                {% elif submission.status == 'RE' %}bg-dark
+                                {% else %}bg-secondary{% endif %}">
+                                {{ submission.get_status_display }}
+                            </span>
+
+                            {% if submission.status == 'RE' and submission.result_details %}
+                                <div class="mt-1">
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            style="font-size: 0.7rem;"
+                                            onclick="showErrorModal(`{{ submission.result_details|escapejs }}`)">
+                                        Ver Traceback 🔍
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ submission.execution_time|default:"0.0" }}s</td>
+                        <td>{{ submission.created_at|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Aún no has enviado ninguna solución.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function showErrorModal(errorMessage) {
+    // Usamos un alert amigable o puedes integrar un modal de Bootstrap si lo prefieres
+    // Por ahora, un alert formateado para debug:
+    alert("DETALLES DEL ERROR:\n\n" + errorMessage);
+}
+</script>
+{% endblock %}
