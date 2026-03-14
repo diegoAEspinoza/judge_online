@@ -6,6 +6,7 @@ from .evaluator import run_python_code
 def evaluate_submission(submission_id):
     submission = Submission.objects.get(id=submission_id)
     submission.status = 'RUNNING'
+    submission.result_details = ""
     submission.save()
 
     testcases = submission.problem.testcases.all()

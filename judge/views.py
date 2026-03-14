@@ -12,7 +12,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.db.models import Exists, OuterRef
 from .models import Problem, Submission
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.contrib.auth.models import User
 
 def global_leaderboard(request):
@@ -21,13 +21,16 @@ def global_leaderboard(request):
             'submission', 
             filter=Q(submission__status='AC'),
             distinct=True
+        ),
+        total_time=Sum(
+            'submission__execution_time',
+            filter=Q(submission__status='AC')
         )
-    ).filter(solved_count__gt=0).order_by('-solved_count', 'username')
+    ).filter(solved_count__gt=0).order_by('-solved_count', 'total_time', 'username') 
 
     return render(request, 'judge/global_leaderboard.html', {
         'rankings': users_ranking
     })
-
 
 def signup(request):
     if request.method == "POST":
