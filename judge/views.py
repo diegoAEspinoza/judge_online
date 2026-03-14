@@ -7,7 +7,20 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+from django.db.models import Min
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
 
+def signup(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('problem_list')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/signup.html', {'form': form})
 
 def register(request):
     if request.method == "POST":
@@ -25,14 +38,13 @@ def problem_detail(request, problem_id):
     problem = get_object_or_404(Problem, id=problem_id)
     return render(request, 'judge/problem_details.html', {'problem': problem})
 
-def submission_status(request, submission_id):
-    submission = get_object_or_404(Submission, id=submission_id)
-    return JsonResponse({"status": submission.status})
-
 def problem_list(request):
     problems = Problem.objects.all()
     return render(request, 'judge/problem_list.html', {'problems': problems})
 
+def submission_status(request, submission_id):
+    submission = get_object_or_404(Submission, id=submission_id)
+    return JsonResponse({"status": submission.status})
 
 @login_required
 def submit_code(request, problem_id):
