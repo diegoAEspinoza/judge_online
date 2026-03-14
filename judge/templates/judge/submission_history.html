@@ -8,7 +8,6 @@
             <table class="table table-hover mb-0 align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th>ID</th>
                         <th>Problema</th>
                         <th>Resultado</th>
                         <th>Tiempo</th>
@@ -18,7 +17,6 @@
                 <tbody>
                     {% for submission in submissions %}
                     <tr>
-                        <td>#{{ submission.id }}</td>
                         <td><strong>{{ submission.problem.title }}</strong></td>
                         <td>
                             <span class="badge 
