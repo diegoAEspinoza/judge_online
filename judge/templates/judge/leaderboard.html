@@ -1,0 +1,35 @@
+{% extends "judge/base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center mb-4">🏆 Leaderboard: {{ problem.title }}</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <table class="table table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Rango</th>
+                            <th>Usuario</th>
+                            <th>Mejor Tiempo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in rankings %}
+                        <tr>
+                            <td><strong>#{{ forloop.counter }}</strong></td>
+                            <td>{{ entry.user__username }}</td>
+                            <td>{{ entry.best_time|format_time }}s</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4">Nadie ha superado este reto aún. ¡Sé el primero!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

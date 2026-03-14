@@ -57,3 +57,17 @@ def submit_code(request, problem_id):
 def submission_history(request):
     submissions = Submission.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'judge/submission_history.html', {'submissions': submissions})
+
+def leaderboard(request, problem_id):
+    problem = get_object_or_404(Problem, id=problem_id)
+    best_submissions = Submission.objects.filter(
+        problem=problem, 
+        status='AC'
+    ).values('user__username').annotate(
+        best_time=Min('execution_time')
+    ).order_by('best_time')
+
+    return render(request, 'judge/leaderboard.html', {
+        'problem': problem,
+        'rankings': best_submissions
+    })

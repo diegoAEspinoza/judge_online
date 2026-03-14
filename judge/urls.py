@@ -7,4 +7,5 @@ urlpatterns = [
     path('problem/<int:problem_id>/submit/', views.submit_code, name='submit_code'),
     path('submission/<int:submission_id>/status/', views.submission_status, name='submission_status'),
     path('history/', views.submission_history, name='submission_history'),
+    path('problem/<int:problem_id>/leaderboard/', views.leaderboard, name='leaderboard'),
 ]
